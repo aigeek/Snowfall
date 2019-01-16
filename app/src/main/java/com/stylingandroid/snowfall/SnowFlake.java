@@ -1,5 +1,6 @@
 package com.stylingandroid.snowfall;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
@@ -21,8 +22,10 @@ class SnowFlake {
     private final float increment;
     private final float flakeSize;
     private final Paint paint;
+    int flakeWidth;
+    int flakeHeight;
 
-    public static SnowFlake create(int width, int height, Paint paint) {
+    public static SnowFlake create(int width, int height, Paint paint,int flakeWidth,int flakeHeight) {
         Random random = new Random();
         int x = random.getRandom(width);
         int y = random.getRandom(height);
@@ -30,16 +33,18 @@ class SnowFlake {
         float angle = random.getRandom(ANGLE_SEED) / ANGLE_SEED * ANGE_RANGE + HALF_PI - HALF_ANGLE_RANGE;
         float increment = random.getRandom(INCREMENT_LOWER, INCREMENT_UPPER);
         float flakeSize = random.getRandom(FLAKE_SIZE_LOWER, FLAKE_SIZE_UPPER);
-        return new SnowFlake(random, position, angle, increment, flakeSize, paint);
+        return new SnowFlake(random, position, angle, increment, paint,flakeWidth,flakeHeight,flakeSize);
     }
 
-    SnowFlake(Random random, Point position, float angle, float increment, float flakeSize, Paint paint) {
+    SnowFlake(Random random, Point position, float angle, float increment,  Paint paint,int flakeWidth,int flakeHeight,float flakeSize) {
         this.random = random;
         this.position = position;
         this.angle = angle;
         this.increment = increment;
-        this.flakeSize = flakeSize;
         this.paint = paint;
+        this.flakeWidth = flakeWidth;
+        this.flakeHeight = flakeHeight;
+        this.flakeSize = flakeSize;
     }
 
     private void move(int width, int height) {
@@ -67,10 +72,36 @@ class SnowFlake {
         angle = random.getRandom(ANGLE_SEED) / ANGLE_SEED * ANGE_RANGE + HALF_PI - HALF_ANGLE_RANGE;
     }
 
-    public void draw(Canvas canvas) {
+    public void draw(Canvas canvas,Bitmap bitmap) {
         int width = canvas.getWidth();
         int height = canvas.getHeight();
         move(width, height);
-        canvas.drawCircle(position.x, position.y, flakeSize, paint);
+        if (bitmap != null){
+            canvas.drawBitmap(bitmap, position.x, position.y, paint);
+            //canvas.rotate((float) (Math.random()*(2*Math.PI)),position.x,position.y);
+            //canvas.rotate((float) (Math.random()*(2*Math.PI)));
+
+            //initial snow
+            //canvas.drawCircle(position.x, position.y, flakeSize, paint);
+        }
+    }
+
+    static class Random {
+        private static final java.util.Random RANDOM = new java.util.Random();
+
+        public float getRandom(float lower, float upper) {
+            float min = Math.min(lower, upper);
+            float max = Math.max(lower, upper);
+            return getRandom(max - min) + min;
+        }
+
+        public float getRandom(float upper) {
+            return RANDOM.nextFloat() * upper;
+        }
+
+        public int getRandom(int upper) {
+            return RANDOM.nextInt(upper);
+        }
+
     }
 }
