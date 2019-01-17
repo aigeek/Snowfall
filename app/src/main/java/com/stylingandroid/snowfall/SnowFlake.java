@@ -5,6 +5,8 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 
+import java.util.TreeMap;
+
 class SnowFlake {
     private static final float ANGE_RANGE = 0.1f;
     private static final float HALF_ANGLE_RANGE = ANGE_RANGE / 2f;
@@ -19,51 +21,101 @@ class SnowFlake {
     private final Random random;
     private final Point position;
     private float angle;
+    private double angle0;
     private final float increment;
     private final float flakeSize;
+    private final TreeMap<Integer,Integer> yuanbaos;
     private final Paint paint;
     int flakeWidth;
     int flakeHeight;
+    private boolean isDown = false;
 
-    public static SnowFlake create(int width, int height, Paint paint,int flakeWidth,int flakeHeight) {
+    public static SnowFlake create(TreeMap<Integer, Integer> yuanbaos, int width, int height, Paint paint, int flakeWidth, int flakeHeight) {
         Random random = new Random();
         int x = random.getRandom(width);
-        int y = random.getRandom(height);
+        int y = -flakeHeight-random.getRandom(height/2);
         Point position = new Point(x, y);
-        float angle = random.getRandom(ANGLE_SEED) / ANGLE_SEED * ANGE_RANGE + HALF_PI - HALF_ANGLE_RANGE;
+        yuanbaos.put(x,y);
+        //起始角度
+        float angle = (float) (Math.PI/8);
         float increment = random.getRandom(INCREMENT_LOWER, INCREMENT_UPPER);
         float flakeSize = random.getRandom(FLAKE_SIZE_LOWER, FLAKE_SIZE_UPPER);
-        return new SnowFlake(random, position, angle, increment, paint,flakeWidth,flakeHeight,flakeSize);
+        return new SnowFlake(yuanbaos,random, position, angle, increment, paint,flakeWidth,flakeHeight,flakeSize);
     }
 
-    SnowFlake(Random random, Point position, float angle, float increment,  Paint paint,int flakeWidth,int flakeHeight,float flakeSize) {
+    SnowFlake(TreeMap<Integer, Integer> yuanbaos, Random random, Point position, float angle, float increment, Paint paint, int flakeWidth, int flakeHeight, float flakeSize) {
         this.random = random;
         this.position = position;
-        this.angle = angle;
+        this.angle0 = angle;
         this.increment = increment;
         this.paint = paint;
         this.flakeWidth = flakeWidth;
         this.flakeHeight = flakeHeight;
         this.flakeSize = flakeSize;
+        this.yuanbaos = yuanbaos;
     }
 
     private void move(int width, int height) {
-        double x = position.x + (increment * Math.cos(angle));
-        double y = position.y + (increment * Math.sin(angle));
-
-        angle += random.getRandom(-ANGLE_SEED, ANGLE_SEED) / ANGLE_DIVISOR;
+        int x = position.x;
+        int y = position.y;
+        if (isDown){
+            return;
+        }
+        //已经出现的的使用重力加速度
+        if (position.y >= -5*flakeHeight){//起始加速点.决定了显示在屏幕上的加速度
+            if (isDown(width,height)) {
+                //附近的元宝增加flakeHeight/3的高度
+                if ((yuanbaos.higherKey(x) != null && (yuanbaos.higherKey(x) - x < flakeWidth / 2))
+                        || (yuanbaos.lowerKey(x) != null) && (x - yuanbaos.lowerKey(x) < flakeWidth / 2)) {
+                    y = position.y - flakeHeight / 3;
+                } else if (yuanbaos.containsKey(x)) {//相同的x位置元宝增加flakeHeight/2的高度
+                    y = position.y - flakeHeight / 2;
+                }else {//其余元宝
+                    y = position.y - flakeHeight;
+                }
+                isDown = true;
+            }else {
+                isDown = false;
+                y = getAccelerateValue(position.y);
+            }
+        }else {//没有出现的递增使其出现
+            y +=increment;
+        }
 
         position.set((int) x, (int) y);
 
-        if (!isInside(width, height)) {
-            reset(width);
-        }
     }
 
+    private void stackBitmap() {
+//        position.y;
+    }
+
+    private boolean isDown(int width, int height) {
+        if (height-position.y < flakeHeight*0.75){
+            return true;
+        }
+        return false;
+    }
+
+    private int getAccelerateValue(int y){
+        //通过余弦函数模拟加速度
+        angle0 += ANGLE_SEED/ANGLE_DIVISOR *Math.PI;// pi/4 * 1/100;
+        //y叠加
+        y = (int) (y+60*increment*(1-Math.cos(angle0)));
+        return y;
+    }
+
+    //循环从上面出现
     private boolean isInside(int width, int height) {
         int x = position.x;
         int y = position.y;
         return x >= -flakeSize - 1 && x + flakeSize <= width && y >= -flakeSize - 1 && y - flakeSize < height;
+    }
+
+    private boolean isFlowOutside(int width, int height) {
+        int x = position.x;
+        int y = position.y;
+        return  y > height;
     }
 
     private void reset(int width) {
@@ -72,11 +124,20 @@ class SnowFlake {
         angle = random.getRandom(ANGLE_SEED) / ANGLE_SEED * ANGE_RANGE + HALF_PI - HALF_ANGLE_RANGE;
     }
 
+    private void resetTest(int width) {
+        position.x = width/2;
+        position.y = -flakeHeight;
+        angle0 = ANGLE_SEED/ANGLE_DIVISOR *Math.PI;// pi/4 * 1/100;
+    }
+
     public void draw(Canvas canvas,Bitmap bitmap) {
         int width = canvas.getWidth();
         int height = canvas.getHeight();
         move(width, height);
         if (bitmap != null){
+            if (position.y < -10){
+                return;
+            }
             canvas.drawBitmap(bitmap, position.x, position.y, paint);
             //canvas.rotate((float) (Math.random()*(2*Math.PI)),position.x,position.y);
             //canvas.rotate((float) (Math.random()*(2*Math.PI)));

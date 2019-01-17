@@ -9,17 +9,25 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
+import java.util.TreeMap;
+
 public class SnowView extends View {
-    private static final int NUM_SNOWFLAKES = 50;
+    private static final int NUM_SNOWFLAKES = 200;
     private static final int DELAY = 5;
 
     private SnowFlake[] snowflakes;
     private Bitmap[] mBitmaps;
+    private SnowFlake mSnowflake;
+    private Bitmap mBitmap;
 
     private Bitmap bitmap;
+
+    private TreeMap<Integer,Integer> yuanbaos;
+
     public SnowView(Context context) {
         super(context);
         bitmap = BitmapFactory.decodeResource(context.getResources(),R.drawable.yuanbao);
+        yuanbaos = new TreeMap<>();
     }
 
     public SnowView(Context context, AttributeSet attrs) {
@@ -32,14 +40,14 @@ public class SnowView extends View {
 
     protected void resize(int width, int height) {
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-//        paint.setColor(Color.WHITE);
-//        paint.setStyle(Paint.Style.FILL);
         snowflakes = new SnowFlake[NUM_SNOWFLAKES];
         mBitmaps = new Bitmap[NUM_SNOWFLAKES];
         for (int i = 0; i < NUM_SNOWFLAKES; i++) {
             mBitmaps[i] = changeBitmapSize(bitmap);
-            snowflakes[i] = SnowFlake.create(width, height, paint,mBitmaps[i].getWidth(),mBitmaps[i].getHeight());
+            snowflakes[i] = SnowFlake.create(yuanbaos,width, height, paint,mBitmaps[i].getWidth(),mBitmaps[i].getHeight());
         }
+//        mBitmap = bitmap;
+//        mSnowflake = SnowFlake.create(yuanbaos,width, height, paint,mBitmap.getWidth(),mBitmap.getHeight());
     }
 
     @Override
