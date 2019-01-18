@@ -12,7 +12,7 @@ import android.view.View;
 import java.util.TreeMap;
 
 public class SnowView extends View {
-    private static final int NUM_SNOWFLAKES = 200;
+    public static final int NUM_SNOWFLAKES = 150;
     private static final int DELAY = 5;
 
     private SnowFlake[] snowflakes;
@@ -44,7 +44,7 @@ public class SnowView extends View {
         mBitmaps = new Bitmap[NUM_SNOWFLAKES];
         for (int i = 0; i < NUM_SNOWFLAKES; i++) {
             mBitmaps[i] = changeBitmapSize(bitmap);
-            snowflakes[i] = SnowFlake.create(yuanbaos,width, height, paint,mBitmaps[i].getWidth(),mBitmaps[i].getHeight());
+            snowflakes[i] = SnowFlake.create(i,yuanbaos,width, height, paint,mBitmaps[i].getWidth(),mBitmaps[i].getHeight());
         }
 //        mBitmap = bitmap;
 //        mSnowflake = SnowFlake.create(yuanbaos,width, height, paint,mBitmap.getWidth(),mBitmap.getHeight());

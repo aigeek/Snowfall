@@ -7,6 +7,8 @@ import android.graphics.Point;
 
 import java.util.TreeMap;
 
+import static com.stylingandroid.snowfall.SnowView.NUM_SNOWFLAKES;
+
 class SnowFlake {
     private static final float ANGE_RANGE = 0.1f;
     private static final float HALF_ANGLE_RANGE = ANGE_RANGE / 2f;
@@ -29,21 +31,29 @@ class SnowFlake {
     int flakeWidth;
     int flakeHeight;
     private boolean isDown = false;
+    private int index;
 
-    public static SnowFlake create(TreeMap<Integer, Integer> yuanbaos, int width, int height, Paint paint, int flakeWidth, int flakeHeight) {
+    public static SnowFlake create(int index, TreeMap<Integer, Integer> yuanbaos, int width, int height, Paint paint, int flakeWidth, int flakeHeight) {
         Random random = new Random();
         int x = random.getRandom(width);
-        int y = -flakeHeight-random.getRandom(height/2);
+        int y = 0;
+        if (index < NUM_SNOWFLAKES/20){//前10个
+            y = -flakeHeight;
+        }else if (index < NUM_SNOWFLAKES/4){//随机20-50个
+            y = -5*flakeHeight-random.getRandom(height/2);
+        }else if (index < NUM_SNOWFLAKES){//中间50-200个
+            y = -7*flakeHeight;
+        }
         Point position = new Point(x, y);
         yuanbaos.put(x,y);
         //起始角度
         float angle = (float) (Math.PI/8);
         float increment = random.getRandom(INCREMENT_LOWER, INCREMENT_UPPER);
         float flakeSize = random.getRandom(FLAKE_SIZE_LOWER, FLAKE_SIZE_UPPER);
-        return new SnowFlake(yuanbaos,random, position, angle, increment, paint,flakeWidth,flakeHeight,flakeSize);
+        return new SnowFlake(index,yuanbaos,random, position, angle, increment, paint,flakeWidth,flakeHeight,flakeSize);
     }
 
-    SnowFlake(TreeMap<Integer, Integer> yuanbaos, Random random, Point position, float angle, float increment, Paint paint, int flakeWidth, int flakeHeight, float flakeSize) {
+    SnowFlake(int index,TreeMap<Integer, Integer> yuanbaos, Random random, Point position, float angle, float increment, Paint paint, int flakeWidth, int flakeHeight, float flakeSize) {
         this.random = random;
         this.position = position;
         this.angle0 = angle;
@@ -53,6 +63,7 @@ class SnowFlake {
         this.flakeHeight = flakeHeight;
         this.flakeSize = flakeSize;
         this.yuanbaos = yuanbaos;
+        this.index = index;
     }
 
     private void move(int width, int height) {
@@ -65,8 +76,10 @@ class SnowFlake {
         if (position.y >= -5*flakeHeight){//起始加速点.决定了显示在屏幕上的加速度
             if (isDown(width,height)) {
                 //附近的元宝增加flakeHeight/3的高度
-                if ((yuanbaos.higherKey(x) != null && (yuanbaos.higherKey(x) - x < flakeWidth / 2))
-                        || (yuanbaos.lowerKey(x) != null) && (x - yuanbaos.lowerKey(x) < flakeWidth / 2)) {
+                if (index < NUM_SNOWFLAKES/2){
+
+//                if ((yuanbaos.higherKey(x) != null && (yuanbaos.higherKey(x) - x < flakeWidth / 2))
+//                        || (yuanbaos.lowerKey(x) != null) && (x - yuanbaos.lowerKey(x) < flakeWidth / 2)) {
                     y = position.y - flakeHeight / 3;
                 } else if (yuanbaos.containsKey(x)) {//相同的x位置元宝增加flakeHeight/2的高度
                     y = position.y - flakeHeight / 2;
@@ -138,12 +151,10 @@ class SnowFlake {
             if (position.y < -10){
                 return;
             }
-            canvas.drawBitmap(bitmap, position.x, position.y, paint);
-            //canvas.rotate((float) (Math.random()*(2*Math.PI)),position.x,position.y);
-            //canvas.rotate((float) (Math.random()*(2*Math.PI)));
-
-            //initial snow
-            //canvas.drawCircle(position.x, position.y, flakeSize, paint);
+            canvas.save();
+            canvas.translate(position.x,position.y);
+            canvas.drawBitmap(bitmap, 0,0, paint);
+            canvas.restore();
         }
     }
 
