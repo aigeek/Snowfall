@@ -16,16 +16,20 @@ public class SnowView extends View {
     private static final int DELAY = 5;
 
     private SnowFlake[] snowflakes;
+    private YuanbaoFlake[] mYuanbaoFlakes;
     private Bitmap[] mBitmaps;
+    private Float[] mScales;
     private SnowFlake mSnowflake;
     private Bitmap mBitmap;
 
     private Bitmap bitmap;
+    private Context mContext;
 
     private TreeMap<Integer,Integer> yuanbaos;
 
     public SnowView(Context context) {
         super(context);
+        this.mContext = context;
         bitmap = BitmapFactory.decodeResource(context.getResources(),R.drawable.yuanbao);
         yuanbaos = new TreeMap<>();
     }
@@ -42,9 +46,15 @@ public class SnowView extends View {
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         snowflakes = new SnowFlake[NUM_SNOWFLAKES];
         mBitmaps = new Bitmap[NUM_SNOWFLAKES];
+        mScales = new Float[NUM_SNOWFLAKES];
+        mYuanbaoFlakes = new YuanbaoFlake[NUM_SNOWFLAKES];
         for (int i = 0; i < NUM_SNOWFLAKES; i++) {
-            mBitmaps[i] = changeBitmapSize(bitmap);
-            snowflakes[i] = SnowFlake.create(i,yuanbaos,width, height, paint,mBitmaps[i].getWidth(),mBitmaps[i].getHeight());
+//            mBitmaps[i] = changeBitmapSize(bitmap);
+//            snowflakes[i] = SnowFlake.create(i,yuanbaos,width, height, paint,mBitmaps[i].getWidth(),mBitmaps[i].getHeight());
+            mScales[i] = (float) (Math.random() / 2 + 0.5f);
+            mYuanbaoFlakes[i] = YuanbaoFlake.create(mContext,i,paint,bitmap.getWidth(),bitmap.getHeight(),
+                    mScales[i],yuanbaos,width, height);
+
         }
 //        mBitmap = bitmap;
 //        mSnowflake = SnowFlake.create(yuanbaos,width, height, paint,mBitmap.getWidth(),mBitmap.getHeight());
@@ -61,9 +71,12 @@ public class SnowView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        for (int i = 0; i < snowflakes.length; i++) {
-            snowflakes[i].draw(canvas,mBitmaps[i]);
+        for (int i = 0; i < mYuanbaoFlakes.length; i++) {
+            mYuanbaoFlakes[i].draw(canvas);
         }
+//        for (int i = 0; i < snowflakes.length; i++) {
+//            snowflakes[i].draw(canvas,mBitmaps[i]);
+//        }
         getHandler().postDelayed(runnable, DELAY);
     }
 
